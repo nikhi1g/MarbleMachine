@@ -109,7 +109,7 @@ class MainScreen(Screen):
     s0 = stepper(port=0, micro_steps=32, hold_current=20, run_current=20, accel_current=20, deaccel_current=20,
                  steps_per_unit=200, speed=8)
 
-    cyprus.set_servo_position(2, 1)
+    cyprus.set_servo_position(2, 1) #change
 
     s0.go_until_press(0, 10000)
 
