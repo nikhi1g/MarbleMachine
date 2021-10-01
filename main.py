@@ -101,7 +101,8 @@ class MainScreen(Screen):
     version = cyprus.read_firmware_version()
     staircaseSpeedText = '0'
     speedramp = 0
-    staircaseSpeed = 40
+    stairspeed = 0
+
 
     cyprus.initialize()
 
@@ -146,12 +147,18 @@ class MainScreen(Screen):
             cyprus.set_pwm_values(1, period_value=80000, compare_value=0, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
             self.staircase.text = 'Staircase On'
 
+    def sliderStaircase(self):
+        if self.staircase.text == 'Staircase Off':
+            cyprus.set_pwm_values(1, period_value=25000, compare_value=self.staircaseSpeed.value, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
 
 
-    def toggleRamp(self):
+
+
+
+    def toggleRamp(self):# git reflog and git checkout will work to recover the last file that was commited but lost
 
         if self.ramp.text == "Press for Ramp":
-            self.s0.setMaxSpeed(500)
+            self.s0.setMaxSpeed(self.speedramp)
             self.ramp.text = "Ramping"
             self.s0.relative_move(28.5)
             self.busymotor()
@@ -188,8 +195,6 @@ class MainScreen(Screen):
         print(self.rampSpeed.value)
         self.speedramp = self.rampSpeed.value
 
-    def setStaircaseSpeed(self, speed):
-        print("Set the staircase speed and update slider text")
 
     def initialize(self):
         print("Close gate, stop staircase and home ramp here")
@@ -201,10 +206,10 @@ class MainScreen(Screen):
         self.ids.auto.color = BLUE
 
     def anticrash(self):
-        cyprus.initialize()
         self.s0.go_until_press(0, 40000)
 
-    def quit(self):
+
+def quit(self):
         print("Exit")
         MyApp().stop()
 

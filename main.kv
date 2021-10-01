@@ -5,6 +5,7 @@
     ramp: ramp
     auto: auto
     rampSpeed: rampSpeed
+    staircaseSpeed: staircaseSpeed
     anticrash: anticrash
     FloatLayout:
         size_hint: None, None
@@ -81,14 +82,14 @@
         DPEAButton:
             id: anticrash
             color: 0.180, 0.188, 0.980, 1
-            text: "anticrash"
+            text: "Crash"
             center_x: root.width * 0.25
             y: root.height * 0.70
             background_color: 0, 0, 0, 0
             background_normal: ''
             size_hint: None,None
             size: 300,100
-            on_press: root.toggleStaircase()
+            on_press: root.anticrash()
             on_release: root.resetColors()
 
 	##################
@@ -98,8 +99,8 @@
         Slider:
             id: rampSpeed
             orientation: 'horizontal'
-            min: 10
-            max: 200
+            min: 300
+            max: 1200
             step: 1
             center_x: root.width * 0.6
             y: root.height * 0.15
@@ -109,13 +110,13 @@
         Slider:
             id: staircaseSpeed
             orientation: 'horizontal'
-            min: 10
-            max: 50
-            step: 1
+            min: 10000
+            max: 40000
+            step: 10
             center_x: root.width * 0.6
             y: root.height * 0.05
             size_hint_x: 7
-            on_value: root.setStaircaseSpeed()
+            on_value: root.sliderStaircase()
 
 
         ##################
