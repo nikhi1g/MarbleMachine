@@ -96,10 +96,11 @@ class MainScreen(Screen):
     title = ObjectProperty(None)
     rampSpeedLabel = ObjectProperty(None)
     staircaseSpeedLabel = ObjectProperty(None)
+    anticrash = ObjectProperty(None)
 
     version = cyprus.read_firmware_version()
     staircaseSpeedText = '0'
-    rampSpeed = INIT_RAMP_SPEED
+    speedramp = 0
     staircaseSpeed = 40
 
     cyprus.initialize()
@@ -109,13 +110,23 @@ class MainScreen(Screen):
     s0 = stepper(port=0, micro_steps=32, hold_current=20, run_current=20, accel_current=20, deaccel_current=20,
                  steps_per_unit=200, speed=8)
 
-    cyprus.set_servo_position(2, 1)
+    cyprus.set_servo_position(2, 0)
 
-    s0.go_until_press(0, 10000)
+    cyprus.set_pwm_values(1, period_value=100000, compare_value=50000, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
+    sleep(6)
+    cyprus.set_pwm_values(1, period_value=80000, compare_value=0, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
+
+    s0.go_until_press(0, 20000)
+    while s0.isBusy():
+        sleep(0.5)
 
     def __init__(self, **kwargs):
         super(MainScreen, self).__init__(**kwargs)
         self.initialize()
+
+    def busymotor(self):
+        while self.s0.isBusy():
+            sleep(0.4)
 
     def toggleGate(self):
         if self.gate.text == 'Open Gate':  # & self.ramp.text == "Press for Ramp":
@@ -129,22 +140,25 @@ class MainScreen(Screen):
 
     def toggleStaircase(self):
         if self.staircase.text == 'Staircase On':
-            cyprus.set_pwm_values(1, period_value=100000, compare_value=50000, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
+            cyprus.set_pwm_values(1, period_value=25000, compare_value=50000, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
             self.staircase.text = 'Staircase Off'
         elif self.staircase.text == 'Staircase Off':
-            cyprus.set_pwm_values(1, period_value=100000, compare_value=0, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
+            cyprus.set_pwm_values(1, period_value=80000, compare_value=0, compare_mode=cyprus.LESS_THAN_OR_EQUAL)
             self.staircase.text = 'Staircase On'
+
+
 
     def toggleRamp(self):
 
         if self.ramp.text == "Press for Ramp":
             self.s0.setMaxSpeed(500)
-            self.s0.relative_move(28.5)
-            self.command.disabled = True
             self.ramp.text = "Ramping"
-            self.s0.go_until_press(0, 20000)
+            self.s0.relative_move(28.5)
+            self.busymotor()
+            self.s0.go_until_press(0, 100000)
+            self.ramp.text = "Ramping"
             self.ramp.text = "Press for Ramp"
-            self.command.disabled = False
+
 
     def command(self):
         self.s0.softStop()
@@ -152,16 +166,27 @@ class MainScreen(Screen):
         refresher.start()
 
     def automatic(self):
-        print('test1')
+        print('auto 1 run has started')
         self.toggleGate()
-        sleep(0.5)
+        sleep(0.15)
         self.toggleGate()
-        self.ramp()
+        sleep(1)
+        self.toggleRamp()
+        self.busymotor()
         self.toggleStaircase()
-        sleep(5)
+        sleep(6)
+        self.toggleStaircase()
 
-    def setRampSpeed(self, speed):
-        print("Set the ramp speed and update slider text")
+    def threadautomatic(self):
+        self.s0.softStop()
+        refresher1 = threading.Thread(target=self.automatic)  # thread call to toggleRamp()
+        refresher1.start()
+
+
+
+    def setRampSpeed(self):
+        print(self.rampSpeed.value)
+        self.speedramp = self.rampSpeed.value
 
     def setStaircaseSpeed(self, speed):
         print("Set the staircase speed and update slider text")
@@ -174,6 +199,10 @@ class MainScreen(Screen):
         self.ids.staircase.color = YELLOW
         self.ids.ramp.color = YELLOW
         self.ids.auto.color = BLUE
+
+    def anticrash(self):
+        cyprus.initialize()
+        self.s0.go_until_press(0, 40000)
 
     def quit(self):
         print("Exit")
