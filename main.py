@@ -69,7 +69,7 @@ cyprus.open_spi()
 # //                    SLUSH/HARDWARE SETUP                    //
 # ////////////////////////////////////////////////////////////////
 sm = ScreenManager()
-ramp = stepper(port=0, speed=INIT_RAMP_SPEED)
+#ramp = stepper(port=0, speed=INIT_RAMP_SPEED)
 
 
 # ////////////////////////////////////////////////////////////////
@@ -157,14 +157,22 @@ class MainScreen(Screen):
 
     def toggleRamp(self):# git reflog and git checkout will work to recover the last file that was commited but lost
 
-        if self.ramp.text == "Press for Ramp":
-            self.s0.setMaxSpeed(self.speedramp)
-            self.ramp.text = "Ramping"
-            self.s0.relative_move(28.5)
-            self.busymotor()
-            self.s0.go_until_press(0, 100000)
-            self.ramp.text = "Ramping"
-            self.ramp.text = "Press for Ramp"
+        if self.ramp.text == "Ramp Off":
+            efresher = threading.Thread(target=self.threadRamp)  # thread call to threadRamp()
+            efresher.start()
+
+    def threadRamp(self):
+        self.s0.relative_move(1)
+        while self.s0.get_position_in_units() <= 28.5:
+            self.ramp.text = "Ramp On"
+            self.speedramp = self.rampSpeed.value
+            self.s0.go_until_press(1, self.speedramp)
+        self.s0.go_until_press(0, 50000)
+        self.busymotor()
+        self.ramp.text = "Ramp Off"
+
+    def sliderRamp(self):
+        print(self.rampSpeed.value)
 
 
     def command(self):
@@ -191,9 +199,7 @@ class MainScreen(Screen):
 
 
 
-    def setRampSpeed(self):
-        print(self.rampSpeed.value)
-        self.speedramp = self.rampSpeed.value
+
 
 
     def initialize(self):
@@ -206,7 +212,7 @@ class MainScreen(Screen):
         self.ids.auto.color = BLUE
 
     def anticrash(self):
-        self.s0.go_until_press(0, 40000)
+        self.s0.softStop()
 
 
 def quit(self):
